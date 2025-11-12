@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfoSearch - Information Lookup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .auth-section, .main-section, .balance-section {
+            display: none;
+        }
+
+        .auth-section.active, .main-section.active, .balance-section.active {
+            display: block;
+        }
+
+        /* Стили для типов поиска */
+        .search-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .search-type-btn {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .search-type-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .search-type-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .search-type-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .search-type-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+
+        .search-type-desc {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Стили для плиток поиска */
+        .tiles-section {
+            margin-bottom: 30px;
+        }
+
+        .tiles-section h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tile {
+            position: relative;
+        }
+
+        .tile input[type="checkbox"] {
+            display: none;
+        }
+
+        .tile label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 100px;
+        }
+
+        .tile input[type="checkbox"]:checked + label {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .tile label:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .tile-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .tile-name {
+            color: #e0e0e0;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .tile-price {
+            color: #00d4ff;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* Форма ввода данных */
+        .input-fields {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .input-fields.show {
+            display: block;
+        }
+
+        .input-fields h4 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(20, 20, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Итоговый блок */
+        .total-block {
+            background: rgba(0, 212, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 2px solid rgba(0, 212, 255, 0.4);
+        }
+
+        .total-label {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .total-amount {
+            color: #00d4ff;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0096c7 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            border-radius: 6px;
+            color: #ff3b30;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 59, 48, 0.3);
+        }
+
+        .balance-info {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .balance-amount {
+            font-size: 32px;
+            color: #00d4ff;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .copy-btn {
+            width: auto;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .error-message {
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            color: #ff6b6b;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .info-box {
+            background: rgba(52, 199, 89, 0.1);
+            border: 1px solid rgba(52, 199, 89, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #34c759;
+            font-size: 13px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .key-display {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .key-display p {
+            color: #00d4ff;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .key-value {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 6px;
+            word-break: break-all;
+            font-family: monospace;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .warning {
+            background: rgba(255, 149, 0, 0.1);
+            border: 1px solid rgba(255, 149, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #ffb84d;
+            font-size: 13px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-tab:hover {
+            color: #00d4ff;
+        }
+
+        .nav-tab.active {
+            color: #00d4ff;
+            border-bottom-color: #00d4ff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00d4ff;
+        }
+
+        .history-item .date {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .history-item .data {
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        .history-item .data strong {
+            color: #00d4ff;
+        }
+
+        .search-results-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-card.pending {
+            border-left-color: #ff9500;
+        }
+
+        .result-card.completed {
+            border-left-color: #34c759;
+        }
+
+        .result-card.not-found {
+            border-left-color: #ff3b30;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .result-type {
+            font-weight: 600;
+            color: #e0e0e0;
+            font-size: 13px;
+        }
+
+        .result-status {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .result-status.pending {
+            background: rgba(255, 149, 0, 0.2);
+            color: #ff9500;
+        }
+
+        .result-status.completed {
+            background: rgba(52, 199, 89, 0.2);
+            color: #34c759;
+        }
+
+        .result-status.not-found {
+            background: rgba(255, 59, 48, 0.2);
+            color: #ff6b6b;
+        }
+
+        .result-data {
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .history-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .badge-green {
+            background: #34c759;
+            box-shadow: 0 0 10px rgba(52, 199, 89, 0.5);
+        }
+
+        .badge-red {
+            background: #ff3b30;
+            box-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+        }
+
+        .notification-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .notification-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .notification-item.unread {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .notification-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .notification-text {
+            font-size: 13px;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .profile-info {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .profile-value {
+            color: #e0e0e0;
+            font-size: 14px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Authentication Section -->
+        <div class="auth-section active" id="authSection">
+            <div class="card">
+                <h1>🔐 System Login</h1>
+                <p class="subtitle">Secure access with unique key</p>
+
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchAuthTab('login')">Login</button>
+                    <button class="tab-btn" onclick="switchAuthTab('register')">Register</button>
+                </div>
+
+                <div id="loginForm">
+                    <div class="input-group">
+                        <label>Your Access Key</label>
+                        <input type="text" id="loginKey" placeholder="Enter your unique key">
+                    </div>
+                    <button class="btn" onclick="login()">Login</button>
+                </div>
+
+                <div id="registerForm" style="display: none;">
+                    <p style="color: #aaa; font-size: 14px; margin-bottom: 20px;">
+                        A unique key will be generated for login. Save it!
+                    </p>
+                    <button class="btn" onclick="register()">Create Account</button>
+                </div>
+
+                <div class="key-display" id="newKeyDisplay" style="display: none;">
+                    <p><strong>⚠️ Your Unique Access Key:</strong></p>
+                    <div class="key-value" id="generatedKey"></div>
+                    <div class="warning">
+                        Save this key! It is required to access the system. Recovery is not possible.
+                    </div>
+                    <button class="btn copy-btn" onclick="copyKey()">📋 Copy Key</button>
+                    <button class="btn btn-secondary" onclick="proceedToMain()">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Section -->
+        <div class="main-section" id="mainSection">
+            <div class="card">
+                <div class="header">
+                    <h1>🔍 InfoSearch</h1>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="position: relative; cursor: pointer;" onclick="toggleNotifications()">
+                            <span style="font-size: 24px;">🔔</span>
+                            <span id="notificationBadge" style="display: none; position: absolute; top: -5px; right: -5px; background: #ff3b30; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center;">0</span>
+                        </div>
+                        <button class="logout-btn" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+
+                <!-- Notifications Dropdown -->
+                <div id="notificationsDropdown" style="display: none; position: absolute; right: 20px; top: 80px; width: 350px; max-height: 400px; overflow-y: auto; background: rgba(30, 30, 46, 0.98); border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); z-index: 1000;">
+                    <div style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="color: #00d4ff; font-size: 16px; margin: 0;">Notifications</h3>
+                        <button onclick="clearAllNotifications()" style="background: none; border: none; color: #888; cursor: pointer; font-size: 12px;">Clear All</button>
+                    </div>
+                    <div id="notificationsList" style="padding: 10px;">
+                        <div style="text-align: center; padding: 20px; color: #666;">No notifications</div>
+                    </div>
+                </div>
+
+                <div class="balance-info">
+                    <p style="color: #888; font-size: 14px;">Your Balance</p>
+                    <div class="balance-amount" id="userBalance">$0.00</div>
+                    <button class="btn copy-btn" onclick="showBalanceSection()">Add Funds</button>
+                </div>
+
+                <div class="nav-tabs">
+                    <button class="nav-tab active" onclick="switchTab('search')">🔍 Search</button>
+                    <button class="nav-tab" onclick="switchTab('history')">📜 History</button>
+                    <button class="nav-tab" onclick="switchTab('profile')">👤 Profile</button>
+                </div>
+
+                <!-- Search Tab -->
+                <div class="tab-content active" id="searchTab">
+                    <div class="error-message" id="searchError"></div>
+
+                    <!-- Search Type Selection -->
+                    <div class="search-type-selector">
+                        <div class="search-type-btn active" onclick="selectSearchType('regular')">
+                            <div class="search-type-icon">🔍</div>
+                            <div class="search-type-title">Regular Search</div>
+                            <div class="search-type-desc">Find information by person's data</div>
+                        </div>
+                        <div class="search-type-btn" onclick="selectSearchType('reverse')">
+                            <div class="search-type-icon">🔄</div>
+                            <div class="search-type-title">Reverse Search</div>
+                            <div class="search-type-desc">Find data by number/document</div>
+                        </div>
+                    </div>
+
+                    <!-- REGULAR SEARCH -->
+                    <div id="regularSearchSection">
+                        <div class="tiles-section">
+                            <h3>Select information types to search:</h3>
+                            <div class="tiles-grid">
+                                <div class="tile">
+                                    <input type="checkbox" id="reg_dl" data-fields="dl_fields" onchange="updateRegularSearch()">
+                                    <label for="reg_dl">
+                                        <div class="tile-icon">🪪</div>
+                                        <div class="tile-name">DL</div>
+                                        <div class="tile-price">$200</div>
+                                    </label>
+                                </div>
+                                <div class="tile">
+                                    <input type="checkbox" id="reg_ssn" data-fields="ssn_fields" onchange="updateRegularSearch()">
+                                    <label for="reg_ssn">
+                                        <div class="tile-icon">🔢</div>
+                                        <div class="tile-name">SSN</div>
+                                        <div class="tile-price">$250</div>
+                                    </label>
+                                </div>
+                                <div class="tile">
+                                    <input type="checkbox" id="reg_name" data-fields="name_fields" onchange="updateRegularSearch()">
+                                    <label for="reg_name">
+                                        <div class="tile-icon">👤</div>
+                                        <div class="tile-name">Name</div>
+                                        <div class="tile-price">$180</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input form for regular search -->
+                        <div class="input-fields" id="regularInputFields">
+                            <h4>Enter search data:</h4>
+                            <!-- Fields will be added dynamically based on selected tiles -->
+                        </div>
+                    </div>
+
+                    <!-- REVERSE SEARCH -->
+                    <div id="reverseSearchSection" style="display: none;">
+                        <div class="tiles-section">
+                            <h3>Select document/data type:</h3>
+                            <div class="tiles-grid">
+                                <div class="tile">
+                                    <input type="checkbox" id="rev_ssn" data-fields="ssn_input" onchange="updateReverseSearch()">
+                                    <label for="rev_ssn">
+                                        <div class="tile-icon">🔢</div>
+                                        <div class="tile-name">SSN</div>
+                                        <div class="tile-price">$300</div>
+                                    </label>
+                                </div>
+                                <div class="tile">
+                                    <input type="checkbox" id="rev_dl" data-fields="dl_input" onchange="updateReverseSearch()">
+                                    <label for="rev_dl">
+                                        <div class="tile-icon">🪪</div>
+                                        <div class="tile-name">DL</div>
+                                        <div class="tile-price">$280</div>
+                                    </label>
+                                </div>
+                                <div class="tile">
+                                    <input type="checkbox" id="rev_phone" data-fields="phone_input" onchange="updateReverseSearch()">
+                                    <label for="rev_phone">
+                                        <div class="tile-icon">📱</div>
+                                        <div class="tile-name">Phone</div>
+                                        <div class="tile-price">$250</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input form for reverse search -->
+                        <div class="input-fields" id="reverseInputFields">
+                            <h4>Enter numbers for search:</h4>
+                            <!-- Fields added dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="total-block">
+                        <div class="total-label">Total charge:</div>
+                        <div class="total-amount" id="totalPrice">$0</div>
+                    </div>
+
+                    <div class="info-box">
+                        ✓ <strong>TEST MODE:</strong> Searches are currently free for testing purposes.
+                    </div>
+
+                    <button class="btn" onclick="performSearch()" id="searchBtn">Start Search</button>
+                </div>
+
+                <!-- History Tab -->
+                <div class="tab-content" id="historyTab">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px;">Search History</h3>
+                    <div id="historyContainer">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>Search history is empty</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tab -->
+                <div class="tab-content" id="profileTab">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px;">Profile Information</h3>
+                    
+                    <div class="profile-info">
+                        <div class="profile-item">
+                            <span class="profile-label">Access Key:</span>
+                            <span class="profile-value" id="profileKey">-</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Registration Date:</span>
+                            <span class="profile-value" id="profileDate">-</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Total Searches:</span>
+                            <span class="profile-value" id="profileSearches">0</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Current Balance:</span>
+                            <span class="profile-value" id="profileBalance">$0.00</span>
+                        </div>
+                    </div>
+
+                    <button class="btn copy-btn" onclick="copyProfileKey()">📋 Copy Key</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Section -->
+        <div class="balance-section" id="balanceSection">
+            <div class="card">
+                <div class="header">
+                    <h1>💰 Add Funds</h1>
+                    <button class="logout-btn" onclick="hideBalanceSection()">← Back</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Top-up Amount ($)</label>
+                    <input type="number" id="topupAmount" placeholder="Enter amount" min="100" value="1000">
+                </div>
+
+                <div class="warning">
+                    In the production version, cryptocurrency payment integration will be here.
+                </div>
+
+                <button class="btn" onclick="addTestBalance()">✓ Add Funds (DEMO)</button>
+                <button class="btn btn-secondary" onclick="hideBalanceSection()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+        let currentUser = localStorage.getItem('currentUser') || null;
+        let currentSearchType = 'regular';
+
+        const tilePrices = {
+            reg_dl: 200,
+            reg_ssn: 250,
+            reg_name: 180,
+            rev_ssn: 300,
+            rev_dl: 280,
+            rev_phone: 250
+        };
+
+        // Field requirements for each tile
+        const tileFieldRequirements = {
+            reg_dl: ['firstname', 'lastname', 'address', 'zip', 'dob'],
+            reg_ssn: ['firstname', 'lastname', 'address'],
+            reg_name: ['firstname', 'lastname', 'mi', 'city', 'state', 'age']
+        };
+
+        window.onload = function() {
+            if (currentUser && users[currentUser]) {
+                showMainSection();
+                updateBalance();
+                loadProfile();
+                loadHistory();
+                updateNotificationBadge();
+                
+                // Check for new notifications every 5 seconds
+                setInterval(updateNotificationBadge, 5000);
+            }
+        };
+
+        // Notification system
+        function getNotifications() {
+            if (!currentUser) return [];
+            return JSON.parse(localStorage.getItem(`notifications_${currentUser}`)) || [];
+        }
+
+        function addNotification(type, message) {
+            if (!currentUser) return;
+            
+            const notifications = getNotifications();
+            notifications.push({
+                id: Date.now(),
+                type: type, // 'completed', 'not_found', 'balance_added'
+                message: message,
+                date: new Date().toISOString(),
+                read: false
+            });
+            
+            localStorage.setItem(`notifications_${currentUser}`, JSON.stringify(notifications));
+            updateNotificationBadge();
+        }
+
+        function updateNotificationBadge() {
+            const notifications = getNotifications();
+            const unreadCount = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notificationBadge');
+            
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationsDropdown');
+            const isVisible = dropdown.style.display === 'block';
+            
+            if (isVisible) {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'block';
+                loadNotifications();
+            }
+        }
+
+        function loadNotifications() {
+            const notifications = getNotifications();
+            const container = document.getElementById('notificationsList');
+            
+            if (notifications.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No notifications</div>';
+                return;
+            }
+
+            const icons = {
+                'completed': '✅',
+                'not_found': '❌',
+                'balance_added': '💰'
+            };
+
+            container.innerHTML = notifications.reverse().map(notif => `
+                <div class="notification-item ${!notif.read ? 'unread' : ''}" onclick="markAsRead(${notif.id})">
+                    <div style="display: flex; align-items: flex-start;">
+                        <span class="notification-icon">${icons[notif.type] || '📢'}</span>
+                        <div style="flex: 1;">
+                            <div class="notification-text">${notif.message}</div>
+                            <div class="notification-time">${new Date(notif.date).toLocaleString('en-US')}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function markAsRead(notifId) {
+            const notifications = getNotifications();
+            const notif = notifications.find(n => n.id === notifId);
+            if (notif) {
+                notif.read = true;
+                localStorage.setItem(`notifications_${currentUser}`, JSON.stringify(notifications));
+                updateNotificationBadge();
+                loadNotifications();
+                
+                // Switch to history tab
+                switchTab('history');
+                toggleNotifications();
+            }
+        }
+
+        function clearAllNotifications() {
+            if (confirm('Clear all notifications?')) {
+                localStorage.setItem(`notifications_${currentUser}`, JSON.stringify([]));
+                updateNotificationBadge();
+                loadNotifications();
+            }
+        }
+
+        // Close notifications when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('notificationsDropdown');
+            const bell = event.target.closest('[onclick="toggleNotifications()"]');
+            
+            if (dropdown && dropdown.style.display === 'block' && !bell && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Выбор типа поиска
+        function selectSearchType(type) {
+            currentSearchType = type;
+            
+            const buttons = document.querySelectorAll('.search-type-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            if (type === 'regular') {
+                document.getElementById('regularSearchSection').style.display = 'block';
+                document.getElementById('reverseSearchSection').style.display = 'none';
+            } else {
+                document.getElementById('regularSearchSection').style.display = 'none';
+                document.getElementById('reverseSearchSection').style.display = 'block';
+            }
+
+            // Сбросить все чекбоксы
+            document.querySelectorAll('.tile input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateTotalPrice();
+        }
+
+        // Обновление обычного поиска
+        function updateRegularSearch() {
+            const container = document.getElementById('regularInputFields');
+            const checkedBoxes = document.querySelectorAll('#regularSearchSection .tile input[type="checkbox"]:checked');
+            
+            if (checkedBoxes.length === 0) {
+                container.classList.remove('show');
+                container.innerHTML = '<h4>Enter search data:</h4>';
+                updateTotalPrice();
+                return;
+            }
+
+            container.classList.add('show');
+            
+            // Собираем уникальные поля из всех выбранных плиток
+            const requiredFields = new Set();
+            const fieldData = {
+                firstname: { label: 'First Name', placeholder: 'John', required: false },
+                lastname: { label: 'Last Name', placeholder: 'Smith', required: false },
+                address: { label: 'Address', placeholder: '123 Main Street, Los Angeles, CA', required: false },
+                zip: { label: 'ZIP Code', placeholder: '90001', required: false },
+                dob: { label: 'Date of Birth', placeholder: 'MM/DD/YYYY', required: false },
+                mi: { label: 'M.I. (or Middle Name)', placeholder: 'A', required: false },
+                city: { label: 'City', placeholder: 'Los Angeles', required: false },
+                state: { label: 'State', placeholder: 'CA', required: false },
+                age: { label: 'Age (Approximate)', placeholder: '35', required: false }
+            };
+
+            checkedBoxes.forEach(cb => {
+                const tileId = cb.id;
+                const fields = tileFieldRequirements[tileId] || [];
+                fields.forEach(field => {
+                    requiredFields.add(field);
+                    if (fieldData[field]) {
+                        fieldData[field].required = true;
+                    }
+                });
+            });
+
+            let html = '<h4>Enter search data:</h4>';
+            
+            // Группируем поля по 2
+            const fieldsArray = Array.from(requiredFields);
+            for (let i = 0; i < fieldsArray.length; i += 2) {
+                html += '<div class="input-grid">';
+                
+                for (let j = i; j < Math.min(i + 2, fieldsArray.length); j++) {
+                    const field = fieldsArray[j];
+                    const data = fieldData[field];
+                    const requiredMark = data.required ? ' *' : '';
+                    
+                    html += `
+                        <div class="input-group">
+                            <label>${data.label}${requiredMark}</label>
+                            <input type="text" id="reg_${field}" placeholder="${data.placeholder}">
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+            updateTotalPrice();
+        }
+
+        // Обновление реверс поиска
+        function updateReverseSearch() {
+            const container = document.getElementById('reverseInputFields');
+            const checkedBoxes = document.querySelectorAll('#reverseSearchSection .tile input[type="checkbox"]:checked');
+            
+            if (checkedBoxes.length === 0) {
+                container.classList.remove('show');
+                container.innerHTML = '<h4>Введите номера для поиска:</h4>';
+                updateTotalPrice();
+                return;
+            }
+
+            container.classList.add('show');
+            let html = '<h4>Введите номера для поиска:</h4>';
+
+            checkedBoxes.forEach(checkbox => {
+                const id = checkbox.id;
+                if (id === 'rev_ssn') {
+                    html += `
+                        <div class="input-group">
+                            <label>SSN Number *</label>
+                            <input type="text" id="input_ssn" placeholder="123-45-6789">
+                        </div>
+                    `;
+                } else if (id === 'rev_dl') {
+                    html += `
+                        <div class="input-group">
+                            <label>DL Number *</label>
+                            <input type="text" id="input_dl" placeholder="D1234567">
+                        </div>
+                    `;
+                } else if (id === 'rev_phone') {
+                    html += `
+                        <div class="input-group">
+                            <label>Phone Number *</label>
+                            <input type="text" id="input_phone" placeholder="+1 (555) 123-4567">
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = html;
+            updateTotalPrice();
+        }
+
+        // Обновление общей цены
+        function updateTotalPrice() {
+            const checkboxes = document.querySelectorAll('.tile input[type="checkbox"]:checked');
+            let total = 0;
+            
+            checkboxes.forEach(checkbox => {
+                total += tilePrices[checkbox.id] || 0;
+            });
+
+            document.getElementById('totalPrice').textContent = '$' + total;
+        }
+
+        // Выполнение поиска
+        function performSearch() {
+            const errorMsg = document.getElementById('searchError');
+            errorMsg.classList.remove('show');
+
+            const errors = [];
+            const selectedTiles = [];
+            const searchData = {
+                type: currentSearchType,
+                tiles: []
+            };
+
+            if (currentSearchType === 'regular') {
+                // Проверка обычного поиска
+                const checkedBoxes = document.querySelectorAll('#regularSearchSection .tile input[type="checkbox"]:checked');
+                
+                if (checkedBoxes.length === 0) {
+                    errors.push('Select at least one information type to search');
+                } else {
+                    const firstname = document.getElementById('reg_firstname').value.trim();
+                    const lastname = document.getElementById('reg_lastname').value.trim();
+                    const address = document.getElementById('reg_address').value.trim();
+
+                    if (!firstname) errors.push('Enter First Name');
+                    if (!lastname) errors.push('Enter Last Name');
+                    if (!address) errors.push('Enter Address');
+
+                    searchData.firstname = firstname;
+                    searchData.lastname = lastname;
+                    searchData.address = address;
+                    searchData.zip = document.getElementById('reg_zip').value.trim();
+                    searchData.dob = document.getElementById('reg_dob').value.trim();
+
+                    checkedBoxes.forEach(cb => {
+                        const tileName = cb.id.replace('reg_', '').toUpperCase();
+                        selectedTiles.push(tileName);
+                        searchData.tiles.push({
+                            name: tileName,
+                            price: tilePrices[cb.id]
+                        });
+                    });
+                }
+            } else {
+                // Проверка реверс поиска
+                const checkedBoxes = document.querySelectorAll('#reverseSearchSection .tile input[type="checkbox"]:checked');
+                
+                if (checkedBoxes.length === 0) {
+                    errors.push('Select at least one document type to search');
+                } else {
+                    checkedBoxes.forEach(cb => {
+                        const id = cb.id;
+                        const tileName = id.replace('rev_', '').toUpperCase();
+                        
+                        if (id === 'rev_ssn') {
+                            const ssn = document.getElementById('input_ssn')?.value.trim();
+                            if (!ssn) errors.push('Enter SSN Number');
+                            searchData.ssn = ssn;
+                        } else if (id === 'rev_dl') {
+                            const dl = document.getElementById('input_dl')?.value.trim();
+                            if (!dl) errors.push('Enter DL Number');
+                            searchData.dl = dl;
+                        } else if (id === 'rev_phone') {
+                            const phone = document.getElementById('input_phone')?.value.trim();
+                            if (!phone) errors.push('Enter Phone Number');
+                            searchData.phone = phone;
+                        }
+
+                        selectedTiles.push(tileName);
+                        searchData.tiles.push({
+                            name: tileName,
+                            price: tilePrices[cb.id]
+                        });
+                    });
+                }
+            }
+
+            if (errors.length > 0) {
+                errorMsg.innerHTML = '❌ <strong>Error:</strong><br>' + errors.join('<br>');
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            // Создание запросов
+            const searchRequests = JSON.parse(localStorage.getItem('searchRequests')) || [];
+            const totalCost = searchData.tiles.reduce((sum, tile) => sum + tile.price, 0);
+
+            searchData.tiles.forEach(tile => {
+                const requestData = {
+                    id: Date.now() + Math.random(),
+                    userKey: currentUser,
+                    date: new Date().toISOString(),
+                    searchType: currentSearchType,
+                    tileName: tile.name,
+                    price: tile.price,
+                    searchData: searchData,
+                    status: 'pending',
+                    found: null,
+                    response: null
+                };
+
+                searchRequests.push(requestData);
+            });
+
+            localStorage.setItem('searchRequests', JSON.stringify(searchRequests));
+
+            // Добавление в историю
+            if (!users[currentUser].searchHistory) {
+                users[currentUser].searchHistory = [];
+            }
+
+            users[currentUser].searchHistory.push({
+                date: new Date().toISOString(),
+                searchType: currentSearchType,
+                tiles: selectedTiles,
+                totalCost: totalCost,
+                searchData: searchData
+            });
+
+            localStorage.setItem('users', JSON.stringify(users));
+            updateBalance();
+            loadProfile();
+
+            // Формирование детального сообщения
+            const searchTypeLabel = currentSearchType === 'regular' ? 'Regular Search' : 'Reverse Search';
+            const tilesDetails = searchData.tiles.map(tile => `  • ${tile.name} - $${tile.price}`).join('\n');
+            
+            let searchDetails = '';
+            if (currentSearchType === 'regular') {
+                searchDetails = `\nSearch Details:\n  Name: ${searchData.firstname} ${searchData.lastname}\n  Address: ${searchData.address}`;
+                if (searchData.zip) searchDetails += `\n  ZIP: ${searchData.zip}`;
+                if (searchData.dob) searchDetails += `\n  DOB: ${searchData.dob}`;
+            } else {
+                searchDetails = '\nSearch Details:';
+                if (searchData.ssn) searchDetails += `\n  SSN: ${searchData.ssn}`;
+                if (searchData.dl) searchDetails += `\n  DL: ${searchData.dl}`;
+                if (searchData.phone) searchDetails += `\n  Phone: ${searchData.phone}`;
+            }
+
+            alert(`✅ ORDER CONFIRMED\n\n━━━━━━━━━━━━━━━━━━━━━\nSearch Type: ${searchTypeLabel}\n\nInformation Requested:\n${tilesDetails}\n${searchDetails}\n\nTotal Cost: $${totalCost}\n━━━━━━━━━━━━━━━━━━━━━\n\n⏳ Your request is being processed.\n\n📋 Results will appear in the "History" tab once the administrator completes the search.\n\n🔔 Check the History section periodically for updates.`);
+
+            // Переключение на вкладку истории
+            setTimeout(() => {
+                switchTab('history');
+            }, 500);
+
+            // Очистка формы
+            document.querySelectorAll('.tile input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[type="text"]').forEach(input => {
+                if (input.id.startsWith('reg_') || input.id.startsWith('input_')) {
+                    input.value = '';
+                }
+            });
+            
+            document.getElementById('regularInputFields').classList.remove('show');
+            document.getElementById('reverseInputFields').classList.remove('show');
+            updateTotalPrice();
+        }
+
+        // Переключение вкладок авторизации
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabButtons = document.querySelectorAll('.tab-btn');
+
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+
+            if (tab === 'login') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                tabButtons[0].classList.add('active');
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                tabButtons[1].classList.add('active');
+            }
+
+            document.getElementById('newKeyDisplay').style.display = 'none';
+        }
+
+        function generateKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let key = '';
+            for (let i = 0; i < 32; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return key;
+        }
+
+        function register() {
+            const newKey = generateKey();
+            
+            users[newKey] = {
+                balance: 0,
+                created: new Date().toISOString(),
+                searchHistory: []
+            };
+
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            document.getElementById('generatedKey').textContent = newKey;
+            document.getElementById('newKeyDisplay').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        function copyKey() {
+            const key = document.getElementById('generatedKey').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                alert('✓ Key copied to clipboard!');
+            });
+        }
+
+        function proceedToMain() {
+            const key = document.getElementById('generatedKey').textContent;
+            currentUser = key;
+            localStorage.setItem('currentUser', currentUser);
+            showMainSection();
+        }
+
+        function login() {
+            const key = document.getElementById('loginKey').value.trim();
+            
+            if (!key) {
+                alert('⚠️ Enter access key');
+                return;
+            }
+
+            if (users[key]) {
+                currentUser = key;
+                localStorage.setItem('currentUser', currentUser);
+                showMainSection();
+            } else {
+                alert('❌ Invalid access key');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showAuthSection();
+            document.getElementById('loginKey').value = '';
+        }
+
+        function showMainSection() {
+            document.getElementById('authSection').classList.remove('active');
+            document.getElementById('mainSection').classList.add('active');
+            document.getElementById('balanceSection').classList.remove('active');
+            updateBalance();
+            loadProfile();
+            loadHistory();
+        }
+
+        function showAuthSection() {
+            document.getElementById('authSection').classList.add('active');
+            document.getElementById('mainSection').classList.remove('active');
+            document.getElementById('balanceSection').classList.remove('active');
+        }
+
+        function showBalanceSection() {
+            document.getElementById('mainSection').classList.remove('active');
+            document.getElementById('balanceSection').classList.add('active');
+        }
+
+        function hideBalanceSection() {
+            document.getElementById('balanceSection').classList.remove('active');
+            document.getElementById('mainSection').classList.add('active');
+        }
+
+        function updateBalance() {
+            if (currentUser && users[currentUser]) {
+                const balance = users[currentUser].balance || 0;
+                document.getElementById('userBalance').textContent = '$' + balance.toFixed(2);
+            }
+        }
+
+        function addTestBalance() {
+            const amount = parseFloat(document.getElementById('topupAmount').value) || 1000;
+            
+            if (!currentUser || !users[currentUser]) return;
+
+            users[currentUser].balance = (users[currentUser].balance || 0) + amount;
+            localStorage.setItem('users', JSON.stringify(users));
+
+            alert('✓ Balance added: $' + amount);
+            updateBalance();
+            hideBalanceSection();
+        }
+
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            if (tab === 'search') {
+                tabs[0].classList.add('active');
+                document.getElementById('searchTab').classList.add('active');
+            } else if (tab === 'history') {
+                tabs[1].classList.add('active');
+                document.getElementById('historyTab').classList.add('active');
+                loadHistory();
+            } else if (tab === 'profile') {
+                tabs[2].classList.add('active');
+                document.getElementById('profileTab').classList.add('active');
+                loadProfile();
+            }
+        }
+
+        function loadProfile() {
+            if (!currentUser || !users[currentUser]) return;
+
+            const user = users[currentUser];
+            const searches = user.searchHistory ? user.searchHistory.length : 0;
+
+            document.getElementById('profileKey').textContent = currentUser.substring(0, 16) + '...';
+            document.getElementById('profileDate').textContent = new Date(user.created).toLocaleDateString('en-US');
+            document.getElementById('profileSearches').textContent = searches;
+            document.getElementById('profileBalance').textContent = '$' + (user.balance || 0).toFixed(2);
+        }
+
+        function copyProfileKey() {
+            navigator.clipboard.writeText(currentUser).then(() => {
+                alert('✓ Key copied to clipboard!');
+            });
+        }
+
+        function loadHistory() {
+            if (!currentUser || !users[currentUser]) return;
+
+            const history = users[currentUser].searchHistory || [];
+            const allRequests = JSON.parse(localStorage.getItem('searchRequests')) || [];
+            const viewedItems = JSON.parse(localStorage.getItem(`viewed_${currentUser}`)) || [];
+            const container = document.getElementById('historyContainer');
+
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>Search history is empty</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = history.map((item, index) => {
+                // Проверка наличия tiles
+                if (!item.tiles || !Array.isArray(item.tiles)) {
+                    item.tiles = [];
+                }
+
+                const searchTypeText = item.searchType === 'regular' ? '🔍 Regular Search' : '🔄 Reverse Search';
+                const tilesText = item.tiles.length > 0 ? item.tiles.join(', ') : 'No data';
+
+                // Найти связанные запросы
+                const relatedRequests = allRequests.filter(req => 
+                    req.userKey === currentUser &&
+                    Math.abs(new Date(req.date).getTime() - new Date(item.date).getTime()) < 5000
+                );
+
+                // Проверка новых завершенных/отмененных запросов
+                let hasNewCompleted = false;
+                let hasNewNotFound = false;
+                const itemKey = `${currentUser}_${item.date}`;
+
+                relatedRequests.forEach(req => {
+                    if (req.status === 'completed' && !viewedItems.includes(itemKey)) {
+                        if (req.found) {
+                            hasNewCompleted = true;
+                            // Add notification
+                            addNotification('completed', `Search completed for ${item.tiles.join(', ')}`);
+                        } else {
+                            hasNewNotFound = true;
+                            addNotification('not_found', `No results found for ${item.tiles.join(', ')}`);
+                        }
+                    }
+                });
+
+                // Создать карточки результатов
+                const resultCards = item.tiles.map(tileName => {
+                    const request = relatedRequests.find(req => req.tileName === tileName);
+                    
+                    if (!request) {
+                        return `
+                            <div class="result-card pending">
+                                <div class="result-header">
+                                    <span class="result-type">${tileName}</span>
+                                    <span class="result-status pending">⏳ Pending</span>
+                                </div>
+                                <div class="result-data">Request is being processed by administrator...</div>
+                            </div>
+                        `;
+                    }
+
+                    if (request.status === 'pending') {
+                        return `
+                            <div class="result-card pending">
+                                <div class="result-header">
+                                    <span class="result-type">${tileName}</span>
+                                    <span class="result-status pending">⏳ Pending</span>
+                                </div>
+                                <div class="result-data">Request is being processed by administrator...</div>
+                            </div>
+                        `;
+                    }
+
+                    if (request.status === 'completed' && !request.found) {
+                        return `
+                            <div class="result-card not-found">
+                                <div class="result-header">
+                                    <span class="result-type">${tileName}</span>
+                                    <span class="result-status not-found">❌ Not Found</span>
+                                </div>
+                                <div class="result-data">Information not found in database</div>
+                            </div>
+                        `;
+                    }
+
+                    if (request.status === 'completed' && request.found) {
+                        return `
+                            <div class="result-card completed">
+                                <div class="result-header">
+                                    <span class="result-type">${tileName}</span>
+                                    <span class="result-status completed">✓ Received</span>
+                                </div>
+                                <div class="result-data">${request.response || 'Data received'}</div>
+                            </div>
+                        `;
+                    }
+
+                    return '';
+                }).join('');
+
+                // Badge для новых статусов
+                let badge = '';
+                if (hasNewCompleted) {
+                    badge = '<div class="history-badge badge-green"></div>';
+                } else if (hasNewNotFound) {
+                    badge = '<div class="history-badge badge-red"></div>';
+                }
+                
+                return `
+                    <div class="history-item" style="position: relative;" onclick="markHistoryViewed('${itemKey}')">
+                        ${badge}
+                        <div class="date">🕒 ${new Date(item.date).toLocaleString('en-US')}</div>
+                        <div class="data">
+                            <strong>Search Type:</strong> ${searchTypeText}<br>
+                            <strong>Information:</strong> ${tilesText}<br>
+                            <strong>Cost:</strong> $${item.totalCost || 0} (TEST - not charged)
+                        </div>
+                        <div class="search-results-grid">
+                            ${resultCards}
+                        </div>
+                    </div>
+                `;
+            }).reverse().join('');
+
+            setTimeout(() => {
+                if (document.getElementById('historyTab').classList.contains('active')) {
+                    loadHistory();
+                }
+            }, 3000);
+        }
+
+        function markHistoryViewed(itemKey) {
+            const viewedItems = JSON.parse(localStorage.getItem(`viewed_${currentUser}`)) || [];
+            if (!viewedItems.includes(itemKey)) {
+                viewedItems.push(itemKey);
+                localStorage.setItem(`viewed_${currentUser}`, JSON.stringify(viewedItems));
+                loadHistory();
+            }
+        }
+    </script>
+</body>
+</html>
