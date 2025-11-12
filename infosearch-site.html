@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfoSearch - Information Lookup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .auth-section, .main-section, .balance-section {
+            display: none;
+        }
+
+        .auth-section.active, .main-section.active, .balance-section.active {
+            display: block;
+        }
+
+        /* Стили для типов поиска */
+        .search-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .search-type-btn {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .search-type-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .search-type-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .search-type-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .search-type-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+
+        .search-type-desc {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Стили для плиток поиска */
+        .tiles-section {
+            margin-bottom: 30px;
+        }
+
+        .tiles-section h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tile {
+            position: relative;
+        }
+
+        .tile input[type="checkbox"] {
+            display: none;
+        }
+
+        .tile label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 100px;
+        }
+
+        .tile input[type="checkbox"]:checked + label {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .tile label:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .tile-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .tile-name {
+            color: #e0e0e0;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .tile-price {
+            color: #00d4ff;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* Форма ввода данных */
+        .input-fields {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .input-fields.show {
+            display: block;
+        }
+
+        .input-fields h4 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(20, 20, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Итоговый блок */
+        .total-block {
+            background: rgba(0, 212, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 2px solid rgba(0, 212, 255, 0.4);
+        }
+
+        .total-label {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .total-amount {
+            color: #00d4ff;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0096c7 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            border-radius: 6px;
+            color: #ff3b30;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 59, 48, 0.3);
+        }
+
+        .balance-info {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .balance-amount {
+            font-size: 32px;
+            color: #00d4ff;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .copy-btn {
+            width: auto;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .error-message {
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            color: #ff6b6b;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .info-box {
+            background: rgba(52, 199, 89, 0.1);
+            border: 1px solid rgba(52, 199, 89, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #34c759;
+            font-size: 13px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .key-display {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .key-display p {
+            color: #00d4ff;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .key-value {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 6px;
+            word-break: break-all;
+            font-family: monospace;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .warning {
+            background: rgba(255, 149, 0, 0.1);
+            border: 1px solid rgba(255, 149, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #ffb84d;
+            font-size: 13px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-tab:hover {
+            color: #00d4ff;
+        }
+
+        .nav-tab.active {
+            color: #00d4ff;
+            border-bottom-color: #00d4ff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00d4ff;
+        }
+
+        .history-item .date {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .history-item .data {
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        .history-item .data strong {
+            color: #00d4ff;
+        }
+
+        .search-results-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-card.pending {
+            border-left-color: #ff9500;
+        }
+
+        .result-card.completed {
+            border-left-color: #34c759;
+        }
+
+        .result-card.not-found {
+            border-left-color: #ff3b30;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .result-type {
+            font-weight: 600;
+            color: #e0e0e0;
+            font-size: 13px;
+        }
+
+        .result-status {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .result-status.pending {
+            background: rgba(255, 149, 0, 0.2);
+            color: #ff9500;
+        }
+
+        .result-status.completed {
+            background: rgba(52, 199, 89, 0.2);
+            color: #34c759;
+        }
+
+        .result-status.not-found {
+            background: rgba(255, 59, 48, 0.2);
+            color: #ff6b6b;
+        }
+
+        .result-data {
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .profile-info {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .profile-value {
+            color: #e0e0e0;
+            font-size: 14px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Authentication Section -->
+        <div class="auth-section active" id="authSection">
+            <div class="card">
+                <h1>🔐 System Login</h1>
+                <p class="subtitle">Secure access with unique key</p>
+
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchAuthTab('login')">Login</button>
+                    <button class="tab-btn" onclick="switchAuthTab('register')">Register</button>
+                </div>
+
+                <div id="loginForm">
+                    <div class="input-group">
+                        <label>Your Access Key</label>
+                        <input type="text" id="loginKey" placeholder="Enter your unique key">
+                    </div>
+                    <button class="btn" onclick="login()">Login</button>
+                </div>
+
+                <div id="registerForm" style="display: none;">
+                    <p style="color: #aaa; font-size: 14px; margin-bottom: 20px;">
+                        A unique key will be generated for login. Save it!
+                    </p>
+                    <button class="btn" onclick="register()">Create Account</button>
+                </div>
+
+                <div class="key-display" id="newKeyDisplay" style="display: none;">
+                    <p><strong>⚠️ Your Unique Access Key:</strong></p>
+                    <div class="key-value" id="generatedKey"></div>
+                    <div class="warning">
+                        Save this key! It is required to access the system. Recovery is not possible.
+                    </div>
+                    <button class="btn copy-btn" onclick="copyKey()">📋 Copy Key</button>
+                    <button class="btn btn-secondary" onclick="proceedToMain()">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Section -->
+        <div class="main-section" id="mainSection">
+            <div class="card">
+                <div class="header">
+                    <h1>🔍 InfoSearch</h1>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+
+                <div class="balance-info">
+                    <p style="color: #888; font-size: 14px;">Your Balance</p>
+                    <div class="balance-amount" id="userBalance">$0.00</div>
+                    <button class="btn copy-btn" onclick="showBalanceSection()">Add Funds</button>
+                </div>
+
+                <div class="nav-tabs">
+                    <button class="nav-tab active" onclick="switchTab('search')">🔍 Search</button>
+                    <button class="nav-tab" onclick="switchTab('history')">📜 History</button>
+                    <button class="nav-tab" onclick="switchTab('profile')">👤 Profile</button>
+                </div>
+
+                <!-- Search Tab -->
+                <div class="tab-content active" id="searchTab">
+                    <div class="error-message" id="searchError"></div>
+
+                    <!-- Search Type Selection -->
+                    <div class="search-type-selector">
+                        <div class="search-type-btn active" onclick="selectSearchType('regular')">
+                            <div class="search-type-icon">🔍</div>
+                            <div class="search-type-title">Regular Search</div>
+                            <div class="search-type-desc">Find information by person's data</div>
+                        </div>
+                        <div class="search-type-btn" onclick="selectSearchType('reverse')">
+                            <div class="search-type-icon">🔄</div>
+                            <div class="search-type-title">Reverse Search</div>
+                            <div class="search-type-desc">Find data by number/document</div>
+                        </div>
+                    </div>
+
+                    <!-- REGULAR SEARCH -->
+                    <div id="regularSearchSection">
+                        <div class="tiles-section">
+                            <h3>Select information types to search:</h3>
+                            <div class="tiles-grid">
+                                <div class="tile">
+                                    <input type="checkbox" id="reg_dl" data-fields="dl_number" onchange="updateRegularSearch()">
+                                    <label for="reg_dl">
+                                        <div class="tile-icon">🪪</div>
+                                        <div class="tile-name">DL</div>
+                                        <div class="tile-price">$200</div>
+                                    </label>
+                                </div>
+                                <div class="tile">
+                                    <input type="checkbox" id="reg_ssn" data-fields="ssn_number" onchange="updateRegularSearch()">
+                                    <label for="reg_ssn">
+                                        <div class="tile-icon">🔢</div>
+                                        <div class="tile-name">SSN</div>
+                                        <div class="tile-price">$250</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input form for regular search -->
+                        <div class="input-fields" id="regularInputFields">
+                            <h4>Enter search data:</h4>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label>First Name *</label>
+                                    <input type="text" id="reg_firstname" placeholder="John">
+                                </div>
+                                <div class="input-group">
+                                    <label>Last Name *</label>
+                                    <input type="text" id="reg_lastname" placeholder="Smith">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Address *</label>
+                                <input type="text" id="reg_address" placeholder="123 Main Street, Los Angeles, CA">
+                            </div>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label>ZIP Code</label>
+                                    <input type="text" id="reg_zip" placeholder="90001">
+                                </div>
+                                <div class="input-group">
+                                    <label>Date of Birth</label>
+                                    <input type="text" id="reg_dob" placeholder="MM/DD/YYYY">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REVERSE SEARCH -->
+                    <div id="reverseSearchSection" style="display: none;">
+                        <div class="tiles-section">
+                            <h3>Select document/data type:</h3>
+                            <div class="tiles-grid">
+                                <div class="tile">
+                                    <input type="checkbox" id="rev_ssn" data-fields="ssn_input" onchange="updateReverseSearch()">
+                                    <label for="rev_ssn">
+                                        <div class="tile-icon">🔢</div>
+                                        <div class="tile-name">SSN</div>
+                                        <div class="tile-price">$300</div>
+                                    </label>
+                                </div>
+                                <div class="tile">
+                                    <input type="checkbox" id="rev_dl" data-fields="dl_input" onchange="updateReverseSearch()">
+                                    <label for="rev_dl">
+                                        <div class="tile-icon">🪪</div>
+                                        <div class="tile-name">DL</div>
+                                        <div class="tile-price">$280</div>
+                                    </label>
+                                </div>
+                                <div class="tile">
+                                    <input type="checkbox" id="rev_phone" data-fields="phone_input" onchange="updateReverseSearch()">
+                                    <label for="rev_phone">
+                                        <div class="tile-icon">📱</div>
+                                        <div class="tile-name">Phone</div>
+                                        <div class="tile-price">$250</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input form for reverse search -->
+                        <div class="input-fields" id="reverseInputFields">
+                            <h4>Enter numbers for search:</h4>
+                            <!-- Fields added dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="total-block">
+                        <div class="total-label">Total charge:</div>
+                        <div class="total-amount" id="totalPrice">$0</div>
+                    </div>
+
+                    <div class="info-box">
+                        ✓ <strong>TEST MODE:</strong> Searches are currently free for testing purposes.
+                    </div>
+
+                    <button class="btn" onclick="performSearch()" id="searchBtn">Start Search</button>
+                </div>
+
+                <!-- History Tab -->
+                <div class="tab-content" id="historyTab">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px;">Search History</h3>
+                    <div id="historyContainer">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>Search history is empty</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tab -->
+                <div class="tab-content" id="profileTab">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px;">Profile Information</h3>
+                    
+                    <div class="profile-info">
+                        <div class="profile-item">
+                            <span class="profile-label">Access Key:</span>
+                            <span class="profile-value" id="profileKey">-</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Registration Date:</span>
+                            <span class="profile-value" id="profileDate">-</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Total Searches:</span>
+                            <span class="profile-value" id="profileSearches">0</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Current Balance:</span>
+                            <span class="profile-value" id="profileBalance">$0.00</span>
+                        </div>
+                    </div>
+
+                    <button class="btn copy-btn" onclick="copyProfileKey()">📋 Copy Key</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Section -->
+        <div class="balance-section" id="balanceSection">
+            <div class="card">
+                <div class="header">
+                    <h1>💰 Add Funds</h1>
+                    <button class="logout-btn" onclick="hideBalanceSection()">← Back</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Top-up Amount ($)</label>
+                    <input type="number" id="topupAmount" placeholder="Enter amount" min="100" value="1000">
+                </div>
+
+                <div class="warning">
+                    In the production version, cryptocurrency payment integration will be here.
+                </div>
+
+                <button class="btn" onclick="addTestBalance()">✓ Add Funds (DEMO)</button>
+                <button class="btn btn-secondary" onclick="hideBalanceSection()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Безопасная загрузка данных из LocalStorage
+        let users = {};
+        let currentUser = null;
+        let currentSearchType = 'regular';
+
+        try {
+            const usersData = localStorage.getItem('users');
+            if (usersData) {
+                users = JSON.parse(usersData);
+                if (typeof users !== 'object' || Array.isArray(users)) {
+                    users = {};
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки пользователей:', error);
+            users = {};
+        }
+
+        try {
+            currentUser = localStorage.getItem('currentUser');
+            if (currentUser && !users[currentUser]) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки текущего пользователя:', error);
+            currentUser = null;
+        }
+
+        const tilePrices = {
+            reg_dl: 200,
+            reg_ssn: 250,
+            rev_ssn: 300,
+            rev_dl: 280,
+            rev_phone: 250
+        };
+
+        // ========== ФУНКЦИИ ВАЛИДАЦИИ ==========
+        
+        function validateName(name, fieldName) {
+            if (!name || name.trim().length === 0) {
+                return `${fieldName} is required`;
+            }
+            if (name.trim().length < 2) {
+                return `${fieldName} must be at least 2 characters`;
+            }
+            if (name.trim().length > 50) {
+                return `${fieldName} must be less than 50 characters`;
+            }
+            if (!/^[a-zA-Zа-яА-ЯёЁ\s'-]+$/.test(name.trim())) {
+                return `${fieldName} contains invalid characters`;
+            }
+            return null;
+        }
+
+        function validateSSN(ssn) {
+            if (!ssn || ssn.trim().length === 0) {
+                return 'SSN is required';
+            }
+            const cleaned = ssn.replace(/[-\s]/g, '');
+            if (!/^\d{9}$/.test(cleaned)) {
+                return 'SSN must be 9 digits (format: XXX-XX-XXXX)';
+            }
+            // Проверка на недопустимые комбинации
+            if (/^000|^666|^9\d{2}/.test(cleaned)) {
+                return 'SSN contains invalid number sequence';
+            }
+            if (/^(\d)\1{8}$/.test(cleaned)) {
+                return 'SSN cannot be all the same digit';
+            }
+            return null;
+        }
+
+        function validateDL(dl) {
+            if (!dl || dl.trim().length === 0) {
+                return 'DL Number is required';
+            }
+            const cleaned = dl.trim();
+            if (cleaned.length < 5 || cleaned.length > 20) {
+                return 'DL Number must be between 5 and 20 characters';
+            }
+            if (!/^[A-Za-z0-9\s-]+$/.test(cleaned)) {
+                return 'DL Number contains invalid characters';
+            }
+            return null;
+        }
+
+        function validatePhone(phone) {
+            if (!phone || phone.trim().length === 0) {
+                return 'Phone Number is required';
+            }
+            const cleaned = phone.replace(/[\s\-\(\)\+]/g, '');
+            if (!/^\d{10,15}$/.test(cleaned)) {
+                return 'Phone Number must be 10-15 digits';
+            }
+            return null;
+        }
+
+        function validateZIP(zip) {
+            if (!zip || zip.trim().length === 0) {
+                return null; // ZIP необязателен
+            }
+            const cleaned = zip.trim();
+            if (!/^\d{5}(-\d{4})?$/.test(cleaned)) {
+                return 'ZIP Code must be in format 12345 or 12345-6789';
+            }
+            return null;
+        }
+
+        function validateDOB(dob) {
+            if (!dob || dob.trim().length === 0) {
+                return null; // DOB необязателен
+            }
+            const cleaned = dob.trim();
+            // Проверка формата MM/DD/YYYY или MM-DD-YYYY
+            const datePattern = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/;
+            if (!datePattern.test(cleaned)) {
+                return 'Date of Birth must be in format MM/DD/YYYY';
+            }
+            const parts = cleaned.split(/[\/\-]/);
+            const month = parseInt(parts[0], 10);
+            const day = parseInt(parts[1], 10);
+            const year = parseInt(parts[2], 10);
+            
+            if (month < 1 || month > 12) {
+                return 'Invalid month in Date of Birth';
+            }
+            if (day < 1 || day > 31) {
+                return 'Invalid day in Date of Birth';
+            }
+            if (year < 1900 || year > new Date().getFullYear()) {
+                return 'Invalid year in Date of Birth';
+            }
+            
+            const date = new Date(year, month - 1, day);
+            if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+                return 'Invalid Date of Birth';
+            }
+            return null;
+        }
+
+        function validateAddress(address) {
+            if (!address || address.trim().length === 0) {
+                return 'Address is required';
+            }
+            if (address.trim().length < 5) {
+                return 'Address must be at least 5 characters';
+            }
+            if (address.trim().length > 200) {
+                return 'Address must be less than 200 characters';
+            }
+            return null;
+        }
+
+        function validateKey(key) {
+            if (!key || key.trim().length === 0) {
+                return 'Access key is required';
+            }
+            if (key.trim().length < 10) {
+                return 'Access key is too short';
+            }
+            if (key.trim().length > 100) {
+                return 'Access key is too long';
+            }
+            return null;
+        }
+
+        function validateAmount(amount, min = 0, max = 1000000) {
+            if (amount === null || amount === undefined || amount === '') {
+                return 'Amount is required';
+            }
+            const num = parseFloat(amount);
+            if (isNaN(num)) {
+                return 'Amount must be a valid number';
+            }
+            if (num < min) {
+                return `Amount must be at least $${min}`;
+            }
+            if (num > max) {
+                return `Amount must be less than $${max}`;
+            }
+            return null;
+        }
+
+        // ========== БЕЗОПАСНЫЕ ФУНКЦИИ РАБОТЫ С LOCALSTORAGE ==========
+
+        function safeGetLocalStorage(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(key);
+                if (item === null) return defaultValue;
+                return JSON.parse(item);
+            } catch (error) {
+                console.error(`Ошибка чтения из LocalStorage (${key}):`, error);
+                return defaultValue;
+            }
+        }
+
+        function safeSetLocalStorage(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (error) {
+                console.error(`Ошибка записи в LocalStorage (${key}):`, error);
+                alert('❌ Ошибка сохранения данных. Проверьте доступное место в браузере.');
+                return false;
+            }
+        }
+
+        // ========== ФУНКЦИИ БЕЗОПАСНОСТИ ==========
+        
+        // Экранирование HTML для предотвращения XSS
+        function escapeHtml(text) {
+            if (text === null || text === undefined) {
+                return '';
+            }
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+
+        // Безопасная вставка текста в элемент
+        function safeSetTextContent(element, text) {
+            if (!element) return;
+            element.textContent = text === null || text === undefined ? '' : String(text);
+        }
+
+        // Безопасная вставка HTML с экранированием
+        function safeSetInnerHTML(element, html) {
+            if (!element) return;
+            element.innerHTML = html === null || html === undefined ? '' : String(html);
+        }
+
+        window.onload = function() {
+            try {
+                if (currentUser && users[currentUser]) {
+                    showMainSection();
+                    updateBalance();
+                    loadProfile();
+                    loadHistory();
+                }
+            } catch (error) {
+                console.error('Ошибка инициализации:', error);
+                showAuthSection();
+            }
+        };
+
+        // Выбор типа поиска
+        function selectSearchType(type) {
+            currentSearchType = type;
+            
+            const buttons = document.querySelectorAll('.search-type-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            if (type === 'regular') {
+                document.getElementById('regularSearchSection').style.display = 'block';
+                document.getElementById('reverseSearchSection').style.display = 'none';
+            } else {
+                document.getElementById('regularSearchSection').style.display = 'none';
+                document.getElementById('reverseSearchSection').style.display = 'block';
+            }
+
+            // Сбросить все чекбоксы
+            document.querySelectorAll('.tile input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateTotalPrice();
+        }
+
+        // Обновление обычного поиска
+        function updateRegularSearch() {
+            const anyChecked = document.querySelectorAll('#regularSearchSection .tile input[type="checkbox"]:checked').length > 0;
+            document.getElementById('regularInputFields').classList.toggle('show', anyChecked);
+            updateTotalPrice();
+        }
+
+        // Обновление реверс поиска
+        function updateReverseSearch() {
+            const container = document.getElementById('reverseInputFields');
+            const checkedBoxes = document.querySelectorAll('#reverseSearchSection .tile input[type="checkbox"]:checked');
+            
+            if (checkedBoxes.length === 0) {
+                container.classList.remove('show');
+                safeSetInnerHTML(container, '<h4>Введите номера для поиска:</h4>');
+                updateTotalPrice();
+                return;
+            }
+
+            container.classList.add('show');
+            let html = '<h4>Введите номера для поиска:</h4>';
+
+            checkedBoxes.forEach(checkbox => {
+                const id = checkbox.id;
+                if (id === 'rev_ssn') {
+                    html += `
+                        <div class="input-group">
+                            <label>SSN Number *</label>
+                            <input type="text" id="input_ssn" placeholder="123-45-6789">
+                        </div>
+                    `;
+                } else if (id === 'rev_dl') {
+                    html += `
+                        <div class="input-group">
+                            <label>DL Number *</label>
+                            <input type="text" id="input_dl" placeholder="D1234567">
+                        </div>
+                    `;
+                } else if (id === 'rev_phone') {
+                    html += `
+                        <div class="input-group">
+                            <label>Phone Number *</label>
+                            <input type="text" id="input_phone" placeholder="+1 (555) 123-4567">
+                        </div>
+                    `;
+                }
+            });
+
+            safeSetInnerHTML(container, html);
+            updateTotalPrice();
+        }
+
+        // Обновление общей цены
+        function updateTotalPrice() {
+            const checkboxes = document.querySelectorAll('.tile input[type="checkbox"]:checked');
+            let total = 0;
+            
+            checkboxes.forEach(checkbox => {
+                total += tilePrices[checkbox.id] || 0;
+            });
+
+            safeSetTextContent(document.getElementById('totalPrice'), '$' + total);
+        }
+
+        // Выполнение поиска
+        function performSearch() {
+            try {
+                const errorMsg = document.getElementById('searchError');
+                if (!errorMsg) {
+                    console.error('Элемент searchError не найден');
+                    return;
+                }
+                errorMsg.classList.remove('show');
+
+                // Проверка авторизации
+                if (!currentUser || !users[currentUser]) {
+                    safeSetInnerHTML(errorMsg, '❌ <strong>Error:</strong><br>You must be logged in to perform search');
+                    errorMsg.classList.add('show');
+                    showAuthSection();
+                    return;
+                }
+
+                const errors = [];
+                const selectedTiles = [];
+                const searchData = {
+                    type: currentSearchType,
+                    tiles: []
+                };
+
+                if (currentSearchType === 'regular') {
+                    // Проверка обычного поиска
+                    const checkedBoxes = document.querySelectorAll('#regularSearchSection .tile input[type="checkbox"]:checked');
+                    
+                    if (checkedBoxes.length === 0) {
+                        errors.push('Select at least one information type to search');
+                    } else {
+                        const firstnameEl = document.getElementById('reg_firstname');
+                        const lastnameEl = document.getElementById('reg_lastname');
+                        const addressEl = document.getElementById('reg_address');
+                        const zipEl = document.getElementById('reg_zip');
+                        const dobEl = document.getElementById('reg_dob');
+
+                        if (!firstnameEl || !lastnameEl || !addressEl) {
+                            errors.push('Form fields not found. Please refresh the page.');
+                            const escapedErrors = errors.map(err => escapeHtml(err)).join('<br>');
+                            safeSetInnerHTML(errorMsg, '❌ <strong>Error:</strong><br>' + escapedErrors);
+                            errorMsg.classList.add('show');
+                            return;
+                        }
+
+                        const firstname = firstnameEl.value.trim();
+                        const lastname = lastnameEl.value.trim();
+                        const address = addressEl.value.trim();
+                        const zip = zipEl ? zipEl.value.trim() : '';
+                        const dob = dobEl ? dobEl.value.trim() : '';
+
+                        // Валидация полей
+                        const firstNameError = validateName(firstname, 'First Name');
+                        if (firstNameError) errors.push(firstNameError);
+
+                        const lastNameError = validateName(lastname, 'Last Name');
+                        if (lastNameError) errors.push(lastNameError);
+
+                        const addressError = validateAddress(address);
+                        if (addressError) errors.push(addressError);
+
+                        if (zip) {
+                            const zipError = validateZIP(zip);
+                            if (zipError) errors.push(zipError);
+                        }
+
+                        if (dob) {
+                            const dobError = validateDOB(dob);
+                            if (dobError) errors.push(dobError);
+                        }
+
+                        searchData.firstname = firstname;
+                        searchData.lastname = lastname;
+                        searchData.address = address;
+                        searchData.zip = zip;
+                        searchData.dob = dob;
+
+                        checkedBoxes.forEach(cb => {
+                            const tileName = cb.id.replace('reg_', '').toUpperCase();
+                            selectedTiles.push(tileName);
+                            const price = tilePrices[cb.id];
+                            if (price) {
+                                searchData.tiles.push({
+                                    name: tileName,
+                                    price: price
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    // Проверка реверс поиска
+                    const checkedBoxes = document.querySelectorAll('#reverseSearchSection .tile input[type="checkbox"]:checked');
+                    
+                    if (checkedBoxes.length === 0) {
+                        errors.push('Select at least one document type to search');
+                    } else {
+                        checkedBoxes.forEach(cb => {
+                            const id = cb.id;
+                            const tileName = id.replace('rev_', '').toUpperCase();
+                            
+                            if (id === 'rev_ssn') {
+                                const ssnEl = document.getElementById('input_ssn');
+                                if (!ssnEl) {
+                                    errors.push('SSN input field not found');
+                                    return;
+                                }
+                                const ssn = ssnEl.value.trim();
+                                const ssnError = validateSSN(ssn);
+                                if (ssnError) {
+                                    errors.push(ssnError);
+                                } else {
+                                    searchData.ssn = ssn;
+                                }
+                            } else if (id === 'rev_dl') {
+                                const dlEl = document.getElementById('input_dl');
+                                if (!dlEl) {
+                                    errors.push('DL input field not found');
+                                    return;
+                                }
+                                const dl = dlEl.value.trim();
+                                const dlError = validateDL(dl);
+                                if (dlError) {
+                                    errors.push(dlError);
+                                } else {
+                                    searchData.dl = dl;
+                                }
+                            } else if (id === 'rev_phone') {
+                                const phoneEl = document.getElementById('input_phone');
+                                if (!phoneEl) {
+                                    errors.push('Phone input field not found');
+                                    return;
+                                }
+                                const phone = phoneEl.value.trim();
+                                const phoneError = validatePhone(phone);
+                                if (phoneError) {
+                                    errors.push(phoneError);
+                                } else {
+                                    searchData.phone = phone;
+                                }
+                            }
+
+                            selectedTiles.push(tileName);
+                            const price = tilePrices[cb.id];
+                            if (price) {
+                                searchData.tiles.push({
+                                    name: tileName,
+                                    price: price
+                                });
+                            }
+                        });
+                    }
+                }
+
+                if (errors.length > 0) {
+                    const escapedErrors = errors.map(err => escapeHtml(err)).join('<br>');
+                    safeSetInnerHTML(errorMsg, '❌ <strong>Validation Errors:</strong><br>' + escapedErrors);
+                    errorMsg.classList.add('show');
+                    return;
+                }
+
+                if (searchData.tiles.length === 0) {
+                    safeSetInnerHTML(errorMsg, '❌ <strong>Error:</strong><br>No valid tiles selected');
+                    errorMsg.classList.add('show');
+                    return;
+                }
+
+                // Создание запросов
+                const searchRequests = safeGetLocalStorage('searchRequests', []);
+                if (!Array.isArray(searchRequests)) {
+                    throw new Error('Invalid searchRequests data format');
+                }
+
+                const totalCost = searchData.tiles.reduce((sum, tile) => sum + (tile.price || 0), 0);
+
+                searchData.tiles.forEach(tile => {
+                    const requestData = {
+                        id: Date.now() + Math.random(),
+                        userKey: currentUser,
+                        date: new Date().toISOString(),
+                        searchType: currentSearchType,
+                        tileName: tile.name,
+                        price: tile.price,
+                        searchData: searchData,
+                        status: 'pending',
+                        found: null,
+                        response: null
+                    };
+
+                    searchRequests.push(requestData);
+                });
+
+                if (!safeSetLocalStorage('searchRequests', searchRequests)) {
+                    return;
+                }
+
+                // Добавление в историю
+                if (!users[currentUser]) {
+                    throw new Error('User not found');
+                }
+
+                if (!users[currentUser].searchHistory) {
+                    users[currentUser].searchHistory = [];
+                }
+
+                users[currentUser].searchHistory.push({
+                    date: new Date().toISOString(),
+                    searchType: currentSearchType,
+                    tiles: selectedTiles,
+                    totalCost: totalCost,
+                    searchData: searchData
+                });
+
+                if (!safeSetLocalStorage('users', users)) {
+                    return;
+                }
+
+                updateBalance();
+                loadProfile();
+
+                // Формирование детального сообщения
+                const searchTypeLabel = currentSearchType === 'regular' ? 'Regular Search' : 'Reverse Search';
+                const tilesDetails = searchData.tiles.map(tile => `  • ${tile.name} - $${tile.price}`).join('\n');
+                
+                let searchDetails = '';
+                if (currentSearchType === 'regular') {
+                    const escapedFirstName = String(searchData.firstname || '').replace(/[<>]/g, '');
+                    const escapedLastName = String(searchData.lastname || '').replace(/[<>]/g, '');
+                    const escapedAddress = String(searchData.address || '').replace(/[<>]/g, '');
+                    searchDetails = `\nSearch Details:\n  Name: ${escapedFirstName} ${escapedLastName}\n  Address: ${escapedAddress}`;
+                    if (searchData.zip) {
+                        const escapedZip = String(searchData.zip).replace(/[<>]/g, '');
+                        searchDetails += `\n  ZIP: ${escapedZip}`;
+                    }
+                    if (searchData.dob) {
+                        const escapedDob = String(searchData.dob).replace(/[<>]/g, '');
+                        searchDetails += `\n  DOB: ${escapedDob}`;
+                    }
+                } else {
+                    searchDetails = '\nSearch Details:';
+                    if (searchData.ssn) {
+                        const escapedSsn = String(searchData.ssn).replace(/[<>]/g, '');
+                        searchDetails += `\n  SSN: ${escapedSsn}`;
+                    }
+                    if (searchData.dl) {
+                        const escapedDl = String(searchData.dl).replace(/[<>]/g, '');
+                        searchDetails += `\n  DL: ${escapedDl}`;
+                    }
+                    if (searchData.phone) {
+                        const escapedPhone = String(searchData.phone).replace(/[<>]/g, '');
+                        searchDetails += `\n  Phone: ${escapedPhone}`;
+                    }
+                }
+
+                alert(`✅ ORDER CONFIRMED\n\n━━━━━━━━━━━━━━━━━━━━━\nSearch Type: ${searchTypeLabel}\n\nInformation Requested:\n${tilesDetails}\n${searchDetails}\n\nTotal Cost: $${totalCost}\n━━━━━━━━━━━━━━━━━━━━━\n\n⏳ Your request is being processed.\n\n📋 Results will appear in the "History" tab once the administrator completes the search.\n\n🔔 Check the History section periodically for updates.`);
+
+                // Переключение на вкладку истории
+                setTimeout(() => {
+                    switchTab('history');
+                }, 500);
+
+                // Очистка формы
+                document.querySelectorAll('.tile input[type="checkbox"]').forEach(cb => cb.checked = false);
+                document.querySelectorAll('input[type="text"]').forEach(input => {
+                    if (input.id.startsWith('reg_') || input.id.startsWith('input_')) {
+                        input.value = '';
+                    }
+                });
+                
+                const regularInputFields = document.getElementById('regularInputFields');
+                const reverseInputFields = document.getElementById('reverseInputFields');
+                if (regularInputFields) regularInputFields.classList.remove('show');
+                if (reverseInputFields) reverseInputFields.classList.remove('show');
+                updateTotalPrice();
+            } catch (error) {
+                console.error('Ошибка выполнения поиска:', error);
+                const errorMsg = document.getElementById('searchError');
+                if (errorMsg) {
+                    safeSetInnerHTML(errorMsg, '❌ <strong>System Error:</strong><br>An error occurred. Please try again or refresh the page.');
+                    errorMsg.classList.add('show');
+                } else {
+                    alert('❌ An error occurred. Please refresh the page.');
+                }
+            }
+        }
+
+        // Переключение вкладок авторизации
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabButtons = document.querySelectorAll('.tab-btn');
+
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+
+            if (tab === 'login') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                tabButtons[0].classList.add('active');
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                tabButtons[1].classList.add('active');
+            }
+
+            document.getElementById('newKeyDisplay').style.display = 'none';
+        }
+
+        function generateKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let key = '';
+            for (let i = 0; i < 32; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return key;
+        }
+
+        function register() {
+            try {
+                const newKey = generateKey();
+                if (!newKey || newKey.length !== 32) {
+                    throw new Error('Failed to generate valid key');
+                }
+                
+                users[newKey] = {
+                    balance: 0,
+                    created: new Date().toISOString(),
+                    searchHistory: []
+                };
+
+                if (!safeSetLocalStorage('users', users)) {
+                    alert('❌ Failed to save user data. Please try again.');
+                    return;
+                }
+                
+                const generatedKeyEl = document.getElementById('generatedKey');
+                const newKeyDisplayEl = document.getElementById('newKeyDisplay');
+                const registerFormEl = document.getElementById('registerForm');
+                
+                if (!generatedKeyEl || !newKeyDisplayEl || !registerFormEl) {
+                    throw new Error('Required elements not found');
+                }
+                
+                safeSetTextContent(generatedKeyEl, newKey);
+                newKeyDisplayEl.style.display = 'block';
+                registerFormEl.style.display = 'none';
+            } catch (error) {
+                console.error('Ошибка регистрации:', error);
+                alert('❌ Registration failed. Please try again.');
+            }
+        }
+
+        function copyKey() {
+            try {
+                const generatedKeyEl = document.getElementById('generatedKey');
+                if (!generatedKeyEl) {
+                    alert('❌ Key not found');
+                    return;
+                }
+                const key = generatedKeyEl.textContent;
+                if (!key || key.trim().length === 0) {
+                    alert('❌ No key to copy');
+                    return;
+                }
+                navigator.clipboard.writeText(key).then(() => {
+                    alert('✓ Key copied to clipboard!');
+                }).catch(() => {
+                    alert('❌ Failed to copy key. Please copy manually.');
+                });
+            } catch (error) {
+                console.error('Ошибка копирования ключа:', error);
+                alert('❌ Failed to copy key');
+            }
+        }
+
+        function proceedToMain() {
+            try {
+                const generatedKeyEl = document.getElementById('generatedKey');
+                if (!generatedKeyEl) {
+                    alert('❌ Key not found');
+                    return;
+                }
+                const key = generatedKeyEl.textContent.trim();
+                const keyError = validateKey(key);
+                if (keyError) {
+                    alert('❌ ' + keyError);
+                    return;
+                }
+                if (!users[key]) {
+                    alert('❌ User not found');
+                    return;
+                }
+                currentUser = key;
+                try {
+                    localStorage.setItem('currentUser', currentUser);
+                } catch (error) {
+                    console.error('Ошибка сохранения текущего пользователя:', error);
+                    alert('❌ Failed to save session. Please try again.');
+                    return;
+                }
+                showMainSection();
+            } catch (error) {
+                console.error('Ошибка перехода в основное меню:', error);
+                alert('❌ An error occurred. Please try again.');
+            }
+        }
+
+        function login() {
+            try {
+                const loginKeyEl = document.getElementById('loginKey');
+                if (!loginKeyEl) {
+                    alert('❌ Login form not found');
+                    return;
+                }
+                const key = loginKeyEl.value.trim();
+                
+                const keyError = validateKey(key);
+                if (keyError) {
+                    alert('⚠️ ' + keyError);
+                    return;
+                }
+
+                if (!users[key]) {
+                    alert('❌ Invalid access key');
+                    return;
+                }
+
+                if (users[key].deactivated) {
+                    alert('❌ Your account has been deactivated. Please contact administrator.');
+                    return;
+                }
+
+                currentUser = key;
+                try {
+                    localStorage.setItem('currentUser', currentUser);
+                } catch (error) {
+                    console.error('Ошибка сохранения сессии:', error);
+                    alert('❌ Failed to save session. Please try again.');
+                    return;
+                }
+                showMainSection();
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                alert('❌ Login failed. Please try again.');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showAuthSection();
+            document.getElementById('loginKey').value = '';
+        }
+
+        function showMainSection() {
+            document.getElementById('authSection').classList.remove('active');
+            document.getElementById('mainSection').classList.add('active');
+            document.getElementById('balanceSection').classList.remove('active');
+            updateBalance();
+            loadProfile();
+            loadHistory();
+        }
+
+        function showAuthSection() {
+            document.getElementById('authSection').classList.add('active');
+            document.getElementById('mainSection').classList.remove('active');
+            document.getElementById('balanceSection').classList.remove('active');
+        }
+
+        function showBalanceSection() {
+            document.getElementById('mainSection').classList.remove('active');
+            document.getElementById('balanceSection').classList.add('active');
+        }
+
+        function hideBalanceSection() {
+            document.getElementById('balanceSection').classList.remove('active');
+            document.getElementById('mainSection').classList.add('active');
+        }
+
+        function updateBalance() {
+            try {
+                const balanceEl = document.getElementById('userBalance');
+                if (!balanceEl) return;
+                
+                if (currentUser && users[currentUser]) {
+                    const balance = parseFloat(users[currentUser].balance) || 0;
+                    if (isNaN(balance)) {
+                        safeSetTextContent(balanceEl, '$0.00');
+                        return;
+                    }
+                    safeSetTextContent(balanceEl, '$' + balance.toFixed(2));
+                } else {
+                    safeSetTextContent(balanceEl, '$0.00');
+                }
+            } catch (error) {
+                console.error('Ошибка обновления баланса:', error);
+            }
+        }
+
+        function addTestBalance() {
+            try {
+                const topupAmountEl = document.getElementById('topupAmount');
+                if (!topupAmountEl) {
+                    alert('❌ Amount input not found');
+                    return;
+                }
+                
+                const amountValue = topupAmountEl.value;
+                const amountError = validateAmount(amountValue, 1, 1000000);
+                if (amountError) {
+                    alert('⚠️ ' + amountError);
+                    return;
+                }
+                
+                const amount = parseFloat(amountValue);
+                if (isNaN(amount) || amount <= 0) {
+                    alert('⚠️ Enter a valid amount');
+                    return;
+                }
+            
+                if (!currentUser || !users[currentUser]) {
+                    alert('❌ User not found. Please login again.');
+                    showAuthSection();
+                    return;
+                }
+
+                const currentBalance = parseFloat(users[currentUser].balance) || 0;
+                users[currentUser].balance = currentBalance + amount;
+                
+                if (!safeSetLocalStorage('users', users)) {
+                    return;
+                }
+
+                alert('✓ Balance added: $' + amount.toFixed(2));
+                updateBalance();
+                hideBalanceSection();
+            } catch (error) {
+                console.error('Ошибка пополнения баланса:', error);
+                alert('❌ Failed to add balance. Please try again.');
+            }
+        }
+
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            if (tab === 'search') {
+                tabs[0].classList.add('active');
+                document.getElementById('searchTab').classList.add('active');
+            } else if (tab === 'history') {
+                tabs[1].classList.add('active');
+                document.getElementById('historyTab').classList.add('active');
+                loadHistory();
+            } else if (tab === 'profile') {
+                tabs[2].classList.add('active');
+                document.getElementById('profileTab').classList.add('active');
+                loadProfile();
+            }
+        }
+
+        function loadProfile() {
+            try {
+                if (!currentUser || !users[currentUser]) return;
+
+                const user = users[currentUser];
+                const searches = Array.isArray(user.searchHistory) ? user.searchHistory.length : 0;
+
+                const profileKeyEl = document.getElementById('profileKey');
+                const profileDateEl = document.getElementById('profileDate');
+                const profileSearchesEl = document.getElementById('profileSearches');
+                const profileBalanceEl = document.getElementById('profileBalance');
+
+                if (profileKeyEl) {
+                    safeSetTextContent(profileKeyEl, currentUser.substring(0, 16) + '...');
+                }
+                if (profileDateEl) {
+                    try {
+                        const createdDate = new Date(user.created);
+                        if (isNaN(createdDate.getTime())) {
+                            safeSetTextContent(profileDateEl, 'N/A');
+                        } else {
+                            safeSetTextContent(profileDateEl, createdDate.toLocaleDateString('en-US'));
+                        }
+                    } catch (error) {
+                        safeSetTextContent(profileDateEl, 'N/A');
+                    }
+                }
+                if (profileSearchesEl) {
+                    safeSetTextContent(profileSearchesEl, searches);
+                }
+                if (profileBalanceEl) {
+                    const balance = parseFloat(user.balance) || 0;
+                    safeSetTextContent(profileBalanceEl, '$' + balance.toFixed(2));
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки профиля:', error);
+            }
+        }
+
+        function copyProfileKey() {
+            try {
+                if (!currentUser) {
+                    alert('❌ No key to copy');
+                    return;
+                }
+                navigator.clipboard.writeText(currentUser).then(() => {
+                    alert('✓ Key copied to clipboard!');
+                }).catch(() => {
+                    alert('❌ Failed to copy key. Please copy manually.');
+                });
+            } catch (error) {
+                console.error('Ошибка копирования ключа профиля:', error);
+                alert('❌ Failed to copy key');
+            }
+        }
+
+        function loadHistory() {
+            try {
+                if (!currentUser || !users[currentUser]) return;
+
+                const history = Array.isArray(users[currentUser].searchHistory) 
+                    ? users[currentUser].searchHistory 
+                    : [];
+                const allRequests = safeGetLocalStorage('searchRequests', []);
+                const container = document.getElementById('historyContainer');
+
+                if (!container) return;
+
+                if (!Array.isArray(allRequests)) {
+                    console.error('Invalid searchRequests format');
+                }
+
+                if (history.length === 0) {
+                    safeSetInnerHTML(container, `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>Search history is empty</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+            const historyHTML = history.map((item, index) => {
+                try {
+                    // Проверка наличия tiles
+                    if (!item.tiles || !Array.isArray(item.tiles)) {
+                        item.tiles = [];
+                    }
+
+                    const searchTypeText = item.searchType === 'regular' ? '🔍 Regular Search' : '🔄 Reverse Search';
+                    const tilesText = item.tiles.length > 0 ? item.tiles.join(', ') : 'No data';
+
+                    // Найти связанные запросы
+                    let relatedRequests = [];
+                    if (Array.isArray(allRequests)) {
+                        relatedRequests = allRequests.filter(req => {
+                            try {
+                                if (!req || !req.userKey || !req.date) return false;
+                                if (req.userKey !== currentUser) return false;
+                                const reqDate = new Date(req.date);
+                                const itemDate = new Date(item.date);
+                                if (isNaN(reqDate.getTime()) || isNaN(itemDate.getTime())) return false;
+                                return Math.abs(reqDate.getTime() - itemDate.getTime()) < 5000;
+                            } catch (error) {
+                                return false;
+                            }
+                        });
+                    }
+
+                    // Создать карточки результатов
+                    const resultCards = item.tiles.map(tileName => {
+                        try {
+                            const request = relatedRequests.find(req => req.tileName === tileName);
+                            
+                            const escapedTileName = escapeHtml(String(tileName || 'Unknown').substring(0, 50));
+                            
+                            if (!request) {
+                                return `
+                                    <div class="result-card pending">
+                                        <div class="result-header">
+                                            <span class="result-type">${escapedTileName}</span>
+                                            <span class="result-status pending">⏳ Pending</span>
+                                        </div>
+                                        <div class="result-data">Request is being processed by administrator...</div>
+                                    </div>
+                                `;
+                            }
+
+                            if (request.status === 'pending') {
+                                return `
+                                    <div class="result-card pending">
+                                        <div class="result-header">
+                                            <span class="result-type">${escapedTileName}</span>
+                                            <span class="result-status pending">⏳ Pending</span>
+                                        </div>
+                                        <div class="result-data">Request is being processed by administrator...</div>
+                                    </div>
+                                `;
+                            }
+
+                            if (request.status === 'completed' && !request.found) {
+                                return `
+                                    <div class="result-card not-found">
+                                        <div class="result-header">
+                                            <span class="result-type">${escapedTileName}</span>
+                                            <span class="result-status not-found">❌ Not Found</span>
+                                        </div>
+                                        <div class="result-data">Information not found in database</div>
+                                    </div>
+                                `;
+                            }
+
+                            if (request.status === 'completed' && request.found) {
+                                const response = escapeHtml(String(request.response || 'Data received').substring(0, 500));
+                                return `
+                                    <div class="result-card completed">
+                                        <div class="result-header">
+                                            <span class="result-type">${escapedTileName}</span>
+                                            <span class="result-status completed">✓ Received</span>
+                                        </div>
+                                        <div class="result-data">${response}</div>
+                                    </div>
+                                `;
+                            }
+
+                            return '';
+                        } catch (error) {
+                            console.error('Ошибка создания карточки результата:', error);
+                            return '';
+                        }
+                    }).join('');
+                    
+                    let dateText = 'N/A';
+                    try {
+                        const itemDate = new Date(item.date);
+                        if (!isNaN(itemDate.getTime())) {
+                            dateText = itemDate.toLocaleString('en-US');
+                        }
+                    } catch (error) {
+                        console.error('Ошибка форматирования даты:', error);
+                    }
+                    
+                    const totalCost = parseFloat(item.totalCost) || 0;
+                    const escapedTilesText = escapeHtml(tilesText);
+                    
+                    return `
+                        <div class="history-item">
+                            <div class="date">🕒 ${escapeHtml(dateText)}</div>
+                            <div class="data">
+                                <strong>Search Type:</strong> ${escapeHtml(searchTypeText)}<br>
+                                <strong>Information:</strong> ${escapedTilesText}<br>
+                                <strong>Cost:</strong> $${escapeHtml(totalCost.toFixed(2))} (TEST - not charged)
+                            </div>
+                            <div class="search-results-grid">
+                                ${resultCards}
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Ошибка обработки элемента истории:', error);
+                    return '';
+                }
+            }).filter(item => item.length > 0).reverse().join('');
+            
+            safeSetInnerHTML(container, historyHTML);
+
+            setTimeout(() => {
+                try {
+                    const historyTab = document.getElementById('historyTab');
+                    if (historyTab && historyTab.classList.contains('active')) {
+                        loadHistory();
+                    }
+                } catch (error) {
+                    console.error('Ошибка обновления истории:', error);
+                }
+            }, 3000);
+            } catch (error) {
+                console.error('Ошибка загрузки истории:', error);
+                safeSetInnerHTML(container, `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <p>Error loading history. Please refresh the page.</p>
+                    </div>
+                `);
+            }
+        }
+    </script>
+</body>
+</html>
